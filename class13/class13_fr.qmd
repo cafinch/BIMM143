@@ -1,0 +1,194 @@
+---
+title: "class13_fr"
+format: pdf
+editor: visual
+author: Cameron Finch (A16734770)
+---
+
+Import csv files with `read.csv()`
+
+```{r}
+counts <- read.csv("airway_scaledcounts.csv", row.names=1)
+metadata <- read.csv("airway_metadata.csv")
+View(counts)
+View(metadata)
+head(counts)
+head(metadata)
+```
+
+```{r}
+m <- metadata$id
+c <- colnames(counts)
+all(m == c)
+```
+> Q1. How many genes in this dataset?
+
+```{r}
+nrow(counts)
+```
+> A1. 38694
+
+> Q2. How many 'control' cell lines?
+
+```{r}
+n.control <- sum(metadata$dex == "control")
+n.control
+```
+> A2. 4
+
+```{r}
+# Code approach 1
+control <- metadata[metadata[,"dex"]=="control",]
+control.counts <- counts[ ,control$id]
+control.mean <- rowSums( control.counts )/4 
+head(control.mean)
+# Code approach 2 (yields same result)
+library(dplyr)
+control <- metadata %>% filter(dex=="control")
+control.counts <- counts %>% select(control$id) 
+control.mean <- rowSums(control.counts)/4
+head(control.mean)
+```
+
+> Q3. How would you make the above code in either approach more robust? Is there a function that could help here?
+
+# The code above helps us find the IDs of the control samples, but the `...(counts)/4` function limits the code to function correctly only when there are four control samples. If the sample was different, it would need a different code to function the same. The following approach yields the same results but is more universal.
+
+> A3:
+
+```{r}
+control <- metadata[metadata$dex == "control", ]
+cc <- ( counts[ , control$id] )
+cm <- rowMeans(cc)
+head(cm)
+```
+> Q4. Follow the same procedure for the treated samples (i.e. calculate the mean per gene across drug treated samples and assign to a labeled vector called treated.mean)
+
+> A4. Repeating the same process for the treatment samples:
+
+```{r}
+treated <- metadata[metadata$dex == "treated", ]
+tc <- counts[ , treated$id]
+tm <- rowMeans(tc)
+head(tm)
+```
+
+# Combine results in data frame
+
+```{r}
+meancounts <- data.frame(cm, tm)
+View(meancounts)
+```
+> Q5a. Plot results showing correlation between treated and control data using base R plots
+> A5a: 
+
+```{r}
+plot(cm, tm)
+library(ggplot2)
+```
+> Q5b. Recreate plot using ggplot2
+>A5b:
+
+```{r}
+ggplot(meancounts) +
+  aes(cm, tm) +
+  geom_point()
+```
+> Q6. Make a logarithmic plot to get a better view on the data close to the origin
+
+> A6:
+
+```{r}
+plot(cm, tm, log="xy", xlab="log control counts", ylab="log treated counts")
+```
+
+```{r}
+meancounts$log2fc <- log2(meancounts[,"tm"]/meancounts[,"cm"])
+head(meancounts)
+```
+
+```{r}
+zero.vals <- which(meancounts[,1:2]==0, arr.ind=T)
+to.rm <- unique(zero.vals[,1])
+mycounts <- meancounts[-to.rm,]
+head(mycounts)
+```
+> Q7. What is the purpose of the `arr.ind=TRUE` argument?
+> A7. `arr.ind = T` will help organize the data into rows and columns so the elements of the data frame can be separated
+
+> Q8. Using the up.ind vector above can you determine how many up regulated genes we have at the greater than 2 fc level? 
+
+```{r}
+sum(mycounts$log2fc > 2)
+sum(mycounts$log2fc < -2)
+```
+> A8. 250
+
+> Q9. Using the down.ind vector above can you determine how many down regulated genes we have at the greater than 2 fc level? 
+
+> A9. 367
+
+> Q10. Do you trust these results? Why or why not?
+
+> A10. Not entirely, because although we know each of these numbers indicate at least a 2fold change, we can't ensure that this indicates a significant difference 
+
+```{r}
+library(DESeq2)
+dds <- DESeqDataSetFromMatrix(countData=counts, 
+                              colData=metadata, 
+                              design=~dex)
+dds
+```
+
+```{r}
+dds <- DESeq(dds)
+res <- results(dds)
+res
+```
+
+```{r}
+summary(res, alpha=0.05)
+```
+> Q11. Run the mapIds() function two more times to add the Entrez ID and UniProt accession and GENENAME as new columns called res$entrez, res$uniprot and res$genename.
+# Making Volcano Plots
+
+```{r}
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+columns(org.Hs.eg.db)
+```
+
+```{r}
+res$symbol <- mapIds(org.Hs.eg.db,
+                     keys=row.names(res), # Our genenames
+                     keytype="ENSEMBL",        # The format of our genenames
+                     column="SYMBOL",          # The new format we want to add
+                     multiVals="first")
+res$entrez <- mapIds(org.Hs.eg.db,
+                     keys=row.names(res),
+                     column="ENTREZID",
+                     keytype="ENSEMBL",
+                     multiVals="first")
+
+res$uniprot <- mapIds(org.Hs.eg.db,
+                     keys=row.names(res),
+                     column="UNIPROT",
+                     keytype="ENSEMBL",
+                     multiVals="first")
+
+res$genename <- mapIds(org.Hs.eg.db,
+                     keys=row.names(res),
+                     column="GENENAME",
+                     keytype="ENSEMBL",
+                     multiVals="first")
+
+head(res)
+```
+
+# Volcano Plot
+
+```{r}
+plot(res$log2FoldChange, -log(res$padj))
+```
+
+The genes far from the 'volcano spout' are the ones that have changed the most significantly.
