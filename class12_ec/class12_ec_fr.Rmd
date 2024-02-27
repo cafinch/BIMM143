@@ -1,0 +1,30 @@
+---
+title: "class12_ec"
+author: "Cameron Finch (A16734770)"
+date: "2024-02-24"
+output: pdf_document
+---
+
+# Population Scale Analysis (Questions 13 & 14)
+
+How many samples do we have?
+
+```{r}
+expr <- read.table("rs806-ag.txt")
+# submission note: the link to the file from the class 12 assignment pdf would not work. I instead had to use the link from the class page 
+head(expr)
+```
+
+```{r}
+nrow(expr)
+```
+
+```{r}
+table(expr$geno)
+```
+```{r}
+library(ggplot2)
+ggplot(expr) + aes(x=geno, y=exp, fill=geno) + 
+  geom_boxplot(notch=T)
+```
+> A14. Higher A content seems to increase gene expression (A|A>A|G>G|G). Therefore, the G|G SNP seems to have a clear association with downregulation of ORMDL3 expression.
