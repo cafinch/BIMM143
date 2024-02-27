@@ -1,0 +1,52 @@
+---
+title: "class14_fr"
+author: "Cameron Finch"
+date: "2024-02-27"
+output: pdf_document
+---
+
+```{r}
+library(DESeq2)
+metaFile <- "data/GSE37704_metadata.csv"
+countFile <- "data/GSE37704_featurecounts.csv"
+```
+
+```{r}
+colData = read.csv("GSE37704_metadata.csv", row.names=1)
+countData = read.csv("GSE37704_featurecounts.csv", row.names=1)
+head(colData)
+head(countData)
+```
+
+```{r}
+countData <- as.matrix(countData[, -1])
+head(countData)
+countData = countData[nrow=, ]
+head(countData)
+```
+```{r}
+
+```
+
+
+```{r} 
+library(pathview)
+library(gage)
+library(gageData)
+```
+
+```{r}
+data("kegg.sets.hs")
+data("sigmet.idx.hs")
+kegg.sets.hs = kegg.sets.hs[sigmet.idx.hs]
+head(kegg.sets.hs, 3)
+```
+
+```{r}
+foldchanges = res$log2FoldChange
+names(foldchanges) = res$entrez
+```
+
+```{r}
+
+```
