@@ -7,4 +7,4 @@ Note: PUSH (up) to bring data from local console to github page; use PULL (down)
 
 - Class 12 Extra Credit [Population Analysis Box Plot](https://github.com/cafinch/BIMM143/blob/main/class12_ec/class12_ec_fr.pdf)
 - Class 14 [DESeq2 mini-project](file:///C:/Users/camer/OneDrive/Documents/BIMM%20143/class14/class14_fr.pdf)
-- Class 19 [Mutated Protein mini-project](file:///C:/Users/camer/OneDrive/Documents/BIMM%20143/BIMM143_Lab19.pdf)
+- Class 19 [Mutated Protein mini-project](https://github.com/cafinch/BIMM143/blob/main/class19/BIMM143_Lab19.pdf)
